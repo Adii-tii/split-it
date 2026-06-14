@@ -135,6 +135,13 @@ class GroupCreateView(APIView):
 class GroupDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
+    def get(self, request, group_id):
+        group = get_group_by_id(group_id)
+        if not group:
+            return Response({"message": "Group not found!"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = GroupSerializer(group)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     def patch(self, request, group_id):
         group = get_group_by_id(group_id)
         if not group:

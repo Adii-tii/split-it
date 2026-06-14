@@ -6,15 +6,26 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 class GroupSerializer(serializers.ModelSerializer):
+    _id = serializers.IntegerField(source='id', read_only=True)
     memberEmail = serializers.SerializerMethodField()
     adminEmail = serializers.EmailField(source='admin_email', read_only=True)
+    balances = serializers.SerializerMethodField()
 
     class Meta:
         model = Group
-        fields = ['id', 'name', 'description', 'adminEmail', 'thumbnail', 'created_at', 'memberEmail']
+        fields = ['id', '_id', 'name', 'description', 'adminEmail', 'thumbnail', 'created_at', 'memberEmail', 'balances']
 
     def get_memberEmail(self, obj):
         return list(obj.memberships.values_list('user__email', flat=True))
+
+    def get_balances(self, obj):
+        return [
+            {
+                "userEmail": ms.user.email,
+                "netBalance": float(ms.net_balance)
+            }
+            for ms in obj.memberships.all()
+        ]
 
 class GroupMembershipSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)

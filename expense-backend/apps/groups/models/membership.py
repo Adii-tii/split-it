@@ -7,6 +7,7 @@ class GroupMembership(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='group_memberships')
     joined_at = models.DateField()
     left_at = models.DateField(null=True, blank=True)
+    net_balance = models.DecimalField(max_digits=12, decimal_places=4, default=0.0)
 
     class Meta:
         db_table = 'group_memberships'

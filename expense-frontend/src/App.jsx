@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ResetPassword from "./pages/ResetPassword";
 import Groups from "./pages/Groups";
+import GroupDetails from "./pages/GroupDetails";
 import UserLayout from "./components/UserLayout";
 import { serverEndpoint } from "./config/appConfig.js";
 import { setUser, clearUser } from "./store.js";
@@ -123,6 +124,18 @@ function App() {
           userDetails ? (
             <UserLayout>
               <Groups />
+            </UserLayout>
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+      <Route
+        path="/groups/:groupId"
+        element={
+          userDetails ? (
+            <UserLayout>
+              <GroupDetails />
             </UserLayout>
           ) : (
             <Navigate to="/login" />

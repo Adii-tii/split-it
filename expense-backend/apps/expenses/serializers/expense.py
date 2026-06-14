@@ -20,12 +20,13 @@ class ExpenseSerializer(serializers.ModelSerializer):
     splitType = serializers.CharField(source='split_type')
     paidBy = serializers.SerializerMethodField()
     splits = ExpenseSplitSerializer(many=True, read_only=True)
+    createdAt = serializers.DateTimeField(source='created_at', read_only=True)
 
     class Meta:
         model = Expense
         fields = [
             'id', '_id', 'title', 'category', 'currency', 'amount', 
-            'exchange_rate', 'splitType', 'date', 'notes', 'paidBy', 'splits', 'created_at'
+            'exchange_rate', 'splitType', 'date', 'notes', 'paidBy', 'splits', 'created_at', 'createdAt'
         ]
 
     def get_paidBy(self, obj):

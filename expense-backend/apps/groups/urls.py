@@ -8,7 +8,21 @@ from apps.groups.views.group import (
     GroupUploadThumbnailView
 )
 
-from apps.expenses.views.expense import ExpenseListCreateView, ExpenseDetailView
+from apps.expenses.views.expense import (
+    ExpenseListCreateView, 
+    ExpenseDetailView,
+    ExpenseTotalOwedView,
+    ExpenseTotalIsOwedView,
+    ExpensePeopleIOweView
+)
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+
+class GroupDummySettlementsView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, *args, **kwargs):
+        return Response({"settlements": []})
 
 urlpatterns = [
     path('my-groups', GroupMyGroupsView.as_view(), name='group_my_groups'),
@@ -24,4 +38,14 @@ urlpatterns = [
     path('<int:group_id>/expenses/', ExpenseListCreateView.as_view(), name='expense_list_create_slash'),
     path('<int:group_id>/expenses/<int:expense_id>', ExpenseDetailView.as_view(), name='expense_detail'),
     path('<int:group_id>/expenses/<int:expense_id>/', ExpenseDetailView.as_view(), name='expense_detail_slash'),
+
+    # Balance and settlements endpoints (with and without trailing slashes)
+    path('<int:group_id>/total-owed', ExpenseTotalOwedView.as_view(), name='group_total_owed'),
+    path('<int:group_id>/total-owed/', ExpenseTotalOwedView.as_view(), name='group_total_owed_slash'),
+    path('<int:group_id>/total-is-owed', ExpenseTotalIsOwedView.as_view(), name='group_total_is_owed'),
+    path('<int:group_id>/total-is-owed/', ExpenseTotalIsOwedView.as_view(), name='group_total_is_owed_slash'),
+    path('<int:group_id>/people-i-owe', ExpensePeopleIOweView.as_view(), name='group_people_i_owe'),
+    path('<int:group_id>/people-i-owe/', ExpensePeopleIOweView.as_view(), name='group_people_i_owe_slash'),
+    path('<int:group_id>/settlements', GroupDummySettlementsView.as_view(), name='group_settlements_dummy'),
+    path('<int:group_id>/settlements/', GroupDummySettlementsView.as_view(), name='group_settlements_dummy_slash'),
 ]

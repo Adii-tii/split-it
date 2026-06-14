@@ -8,7 +8,8 @@ from apps.users.views import (
     GenerateCodeView,
     VerifyCodeView,
     ResetPasswordView,
-    UsersListView
+    UsersListView,
+    GoogleAuthView
 )
 
 urlpatterns = [
@@ -21,4 +22,5 @@ urlpatterns = [
     path('generate-code', GenerateCodeView.as_view(), name='generate_code'),
     path('verify-code', VerifyCodeView.as_view(), name='verify_code'),
     path('reset-password', ResetPasswordView.as_view(), name='reset_password'),
+    path('google-auth', GoogleAuthView.as_view(), name='google_auth'),
 ]

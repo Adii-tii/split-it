@@ -8,7 +8,6 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.backends import TokenBackend
 from django.contrib.auth import authenticate, get_user_model
 from django.core.exceptions import ValidationError
 
@@ -34,6 +33,7 @@ def get_tokens_for_user(user):
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
@@ -50,26 +50,20 @@ class RegisterView(APIView):
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
             
         tokens = get_tokens_for_user(user)
-        response = Response({
-            "username": user.username,
-            "email": user.email,
+        return Response({
+            "token": tokens['access'],
+            "refreshToken": tokens['refresh'],
+            "user": {
+                "username": user.username,
+                "email": user.email,
+                "id": user.id
+            },
             "message": "Successfully registered in"
         }, status=status.HTTP_200_OK)
-        
-        # Set cookie
-        response.set_cookie(
-            'jwt',
-            tokens['access'],
-            max_age=3600,
-            httponly=True,
-            samesite='Lax',
-            secure=False,  # Set to True in prod if HTTPS
-            path='/'
-        )
-        return response
 
 class LoginView(APIView):
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def post(self, request):
         # We also support VITE login flow check via auth/valid-login
@@ -88,35 +82,20 @@ class LoginView(APIView):
             return Response({"message": "Incorrect password"}, status=status.HTTP_400_BAD_REQUEST)
             
         tokens = get_tokens_for_user(user)
-        response = Response({
-            "username": user.username,
-            "email": user.email,
+        return Response({
+            "token": tokens['access'],
+            "refreshToken": tokens['refresh'],
+            "user": {
+                "username": user.username,
+                "email": user.email,
+                "id": user.id
+            },
             "message": "Successfully logged in"
         }, status=status.HTTP_200_OK)
-        
-        # Set cookies
-        response.set_cookie(
-            'jwt',
-            tokens['access'],
-            max_age=3600,
-            httponly=True,
-            samesite='Lax',
-            secure=False,
-            path='/'
-        )
-        response.set_cookie(
-            'refreshJwt',
-            tokens['refresh'],
-            max_age=7*24*3600,
-            httponly=True,
-            samesite='Lax',
-            secure=False,
-            path='/'
-        )
-        return response
 
 class ValidLoginCheckView(APIView):
     permission_classes = [AllowAny]
+    authentication_classes = []
     
     def post(self, request):
         # Endpoint to check if user has a password (valid-login)
@@ -132,37 +111,27 @@ class GetUserView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        token = request.COOKIES.get('jwt')
-        if not token:
+        if not request.user or not request.user.is_authenticated:
             return Response({"message": "Unauthorized access"}, status=status.HTTP_401_UNAUTHORIZED)
             
-        try:
-            # Decode the token
-            from rest_framework_simplejwt.backends import TokenBackend
-            valid_data = TokenBackend(algorithm='HS256').decode(token, verify=True)
-            user_id = valid_data.get('user_id')
-            user = User.objects.get(id=user_id)
-            return Response({
-                "user": {
-                    "username": user.username,
-                    "email": user.email,
-                    "id": user.id
-                }
-            }, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"message": "Invalid token"}, status=status.HTTP_401_UNAUTHORIZED)
+        user = request.user
+        return Response({
+            "user": {
+                "username": user.username,
+                "email": user.email,
+                "id": user.id
+            }
+        }, status=status.HTTP_200_OK)
 
 class LogoutView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        response = Response({"message": "logout successfull"}, status=status.HTTP_200_OK)
-        response.delete_cookie('jwt', path='/')
-        response.delete_cookie('refreshJwt', path='/')
-        return response
+        return Response({"message": "logout successfull"}, status=status.HTTP_200_OK)
 
 class GenerateCodeView(APIView):
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def post(self, request):
         serializer = ResetPasswordRequestSerializer(data=request.data)
@@ -189,6 +158,7 @@ class GenerateCodeView(APIView):
 
 class VerifyCodeView(APIView):
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def post(self, request):
         serializer = VerifyCodeSerializer(data=request.data)
@@ -217,6 +187,7 @@ class VerifyCodeView(APIView):
 
 class ResetPasswordView(APIView):
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def post(self, request):
         serializer = ResetPasswordSerializer(data=request.data)
@@ -246,22 +217,61 @@ class ProfileInfoView(APIView):
     permission_classes = [AllowAny]
     
     def get(self, request):
-        token = request.COOKIES.get('jwt')
-        if not token:
+        if not request.user or not request.user.is_authenticated:
             return Response({"message": "Unauthorized access"}, status=status.HTTP_401_UNAUTHORIZED)
             
+        user = request.user
+        return Response({
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+            }
+        }, status=status.HTTP_200_OK)
+
+import urllib.request
+import json
+
+class GoogleAuthView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        id_token = request.data.get("idToken")
+        if not id_token:
+            return Response({"message": "invalid request"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        # Verify with Google's API
+        url = f"https://oauth2.googleapis.com/tokeninfo?id_token={id_token}"
         try:
-            from rest_framework_simplejwt.backends import TokenBackend
-            valid_data = TokenBackend(algorithm='HS256').decode(token, verify=True)
-            user_id = valid_data.get('user_id')
-            user = User.objects.get(id=user_id)
-            return Response({
-                "user": {
-                    "id": user.id,
-                    "username": user.username,
-                    "email": user.email,
-                }
-            }, status=status.HTTP_200_OK)
+            req = urllib.request.Request(url, method='GET')
+            with urllib.request.urlopen(req) as response:
+                payload = json.loads(response.read().decode('utf-8'))
         except Exception as e:
-            return Response({"message": "Invalid token"}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"message": "Invalid Google token"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        email = payload.get("email")
+        name = payload.get("name")
+        
+        if not email:
+            return Response({"message": "Invalid token payload"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        # Get or create user
+        user, created = User.objects.get_or_create(
+            email=email,
+            defaults={'username': name or email.split('@')[0]}
+        )
+        
+        tokens = get_tokens_for_user(user)
+        return Response({
+            "token": tokens['access'],
+            "refreshToken": tokens['refresh'],
+            "user": {
+                "username": user.username,
+                "email": user.email,
+                "id": user.id
+            },
+            "message": "Google login successful"
+        }, status=status.HTTP_200_OK)
+
 

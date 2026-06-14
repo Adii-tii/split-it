@@ -1,122 +1,129 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { Route, Routes, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import axios from "axios";
+import { BeatLoader } from "react-spinners";
 
-function App() {
-  const [count, setCount] = useState(0)
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import ResetPassword from "./pages/ResetPassword";
+import { serverEndpoint } from "./config/appConfig.js";
+import { setUser, clearUser } from "./store.js";
+
+// Placeholder components for routing targets
+function Dashboard() {
+  const user = useSelector((state) => state.userDetails);
+  const dispatch = useDispatch();
+  
+  const handleLogout = async () => {
+    try {
+      await axios.get(`${serverEndpoint}/auth/logout`);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+      delete axios.defaults.headers.common["Authorization"];
+      dispatch(clearUser());
+    }
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 p-6 text-slate-100">
+      <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-8 text-center shadow-2xl">
+        <h1 className="text-2xl font-bold text-white mb-2">Dashboard (Placeholder)</h1>
+        <p className="text-slate-400 mb-6">Successfully authenticated!</p>
+        
+        <div className="rounded-lg bg-slate-950 p-4 border border-slate-800 text-left space-y-2 mb-6">
+          <p className="text-xs text-slate-500 uppercase font-semibold">User Details</p>
+          <p className="text-sm font-medium text-white"><span className="text-slate-400">Name:</span> {user?.username}</p>
+          <p className="text-sm font-medium text-white"><span className="text-slate-400">Email:</span> {user?.email}</p>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
+
         <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
+          onClick={handleLogout}
+          className="w-full rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 transition-colors"
         >
-          Count is {count}
+          Logout
         </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      </div>
+    </div>
+  );
 }
 
-export default App
+function Home() {
+  return <Navigate to="/dashboard" />;
+}
+
+function App() {
+  const dispatch = useDispatch();
+  const userDetails = useSelector((state) => state.userDetails);
+  const [loading, setLoading] = useState(true);
+
+  const getUser = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      dispatch(clearUser());
+      setLoading(false);
+      return;
+    }
+
+    // Set global Axios auth header
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+    try {
+      const res = await axios.get(`${serverEndpoint}/auth/get-user`);
+      if (res.data && res.data.user) {
+        dispatch(setUser(res.data.user));
+      }
+    } catch (error) {
+      console.log("No authenticated session found.");
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+      delete axios.defaults.headers.common["Authorization"];
+      dispatch(clearUser());
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getUser();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950">
+        <BeatLoader color="#7C6CF2" size={15} />
+      </div>
+    );
+  }
+
+  return (
+    <Routes>
+      <Route
+        path="/login"
+        element={
+          userDetails ? <Navigate to="/dashboard" /> : <Login refreshAuth={getUser} />
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          userDetails ? <Navigate to="/dashboard" /> : <Register refreshAuth={getUser} />
+        }
+      />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route
+        path="/dashboard"
+        element={
+          userDetails ? <Dashboard /> : <Navigate to="/login" />
+        }
+      />
+      <Route path="/" element={<Home />} />
+      <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
+  );
+}
+
+export default App;

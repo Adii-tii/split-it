@@ -1,25 +1,24 @@
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
-from rest_framework_simplejwt.backends import TokenBackend
+from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.exceptions import TokenError
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-class JWTCookieAuthentication(BaseAuthentication):
+class JWTHeaderAuthentication(BaseAuthentication):
     def authenticate(self, request):
-        token = request.COOKIES.get('jwt')
-        if not token:
-            # Fallback to Authorization header if cookie not present
-            auth_header = request.headers.get('Authorization')
-            if auth_header and auth_header.startswith('Bearer '):
-                token = auth_header.split(' ')[1]
-            else:
-                return None
-                
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return None
+            
+        token = auth_header.split(' ')[1]
         try:
-            valid_data = TokenBackend(algorithm='HS256').decode(token, verify=True)
-            user_id = valid_data.get('user_id')
+            validated_token = AccessToken(token)
+            user_id = validated_token.get('user_id')
             user = User.objects.get(id=user_id)
             return (user, token)
-        except Exception:
-            raise AuthenticationFailed('Invalid or expired token')
+        except (TokenError, User.DoesNotExist) as e:
+            raise AuthenticationFailed(f'Invalid or expired token: {e}')
+
+

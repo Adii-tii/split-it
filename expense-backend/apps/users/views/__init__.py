@@ -8,7 +8,8 @@ from .auth import (
     VerifyCodeView,
     ResetPasswordView,
     UsersListView,
-    ProfileInfoView
+    ProfileInfoView,
+    GoogleAuthView
 )
 
 __all__ = [
@@ -21,5 +22,6 @@ __all__ = [
     'VerifyCodeView',
     'ResetPasswordView',
     'UsersListView',
-    'ProfileInfoView'
+    'ProfileInfoView',
+    'GoogleAuthView'
 ]

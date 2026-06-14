@@ -1,8 +1,65 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap');
 @import "tailwindcss";
+
+@theme {
+  --color-slate-950: #131315;
+  --color-slate-900: #1B1B1D;
+  --color-slate-850: #28282B;
+  --color-slate-800: #39393B;
+  --color-slate-750: #39393B;
+  --color-slate-700: #39393B;
+  --color-slate-600: #5A5A62;
+  --color-slate-500: #88888D;
+  --color-slate-400: #A1A1AA;
+  --color-slate-300: #D4D4D8;
+  --color-slate-200: #E4E4E7;
+  --color-slate-100: #FFFFFF;
+  
+  --color-violet-400: #9D5CFF;
+  --color-violet-500: #9D5CFF;
+  --color-violet-600: #9D5CFF;
+  --color-violet-650: #9D5CFF;
+  --color-violet-700: #9D5CFF;
+  --color-violet-800: #9D5CFF;
+  
+  --color-emerald-400: #10B981;
+  --color-emerald-500: #10B981;
+  --color-emerald-600: #10B981;
+  
+  --color-red-400: #EF4444;
+  
+  --color-yellow-500: #FFD700;
+  --color-yellow-600: #FFD700;
+  
+  --font-sans: 'Manrope', sans-serif;
+  
+  /* Disable shadows to match the custom no-shadow theme */
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
+  --shadow-2xl: none;
+}
 
 @layer base {
   body {
     @apply bg-slate-950 text-slate-100 antialiased;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'Manrope', sans-serif !important;
+    background-color: #131315 !important;
+  }
+  
+  h1, h2, h3, h4, h5, h6,
+  .text-dark, .fw-semibold, .fw-medium, .fw-bold {
+    color: #FFFFFF !important;
+  }
+
+  .text-muted, small, .small {
+    color: #A1A1AA !important;
+  }
+
+  /* Focus and outline cleanup */
+  input:focus, textarea:focus, select:focus, button:focus {
+    outline: none !important;
+    box-shadow: none !important;
   }
 }

@@ -44,3 +44,34 @@ def get_group_members_at_date(group: Group, target_date: date) -> QuerySet[User]
 
 def get_all_groups() -> QuerySet[Group]:
     return Group.objects.all().order_by('-created_at')
+
+def get_user_net_balance_in_group(group: Group, user: User) -> float:
+    from django.db import models as dj_models
+    from django.db.models import Sum
+    from decimal import Decimal
+    from apps.expenses.models import Expense, ExpenseSplit
+    from apps.settlements.models import Settlement
+    
+    # 1. Total paid by user in expenses in this group
+    total_paid = Expense.objects.filter(group=group, paid_by=user).aggregate(
+        total=Sum(dj_models.F('amount') * dj_models.F('exchange_rate'))
+    )['total'] or Decimal('0.0')
+    
+    # 2. Total owed by user (splits) in this group
+    total_owed = ExpenseSplit.objects.filter(expense__group=group, user=user).aggregate(
+        total=Sum('amount')
+    )['total'] or Decimal('0.0')
+    
+    # 3. Total paid by user in settlements
+    settlements_paid = Settlement.objects.filter(group=group, payer=user).aggregate(
+        total=Sum('amount')
+    )['total'] or Decimal('0.0')
+    
+    # 4. Total received by user in settlements
+    settlements_received = Settlement.objects.filter(group=group, payee=user).aggregate(
+        total=Sum('amount')
+    )['total'] or Decimal('0.0')
+    
+    net_balance = total_paid - total_owed + settlements_paid - settlements_received
+    return float(net_balance)
+

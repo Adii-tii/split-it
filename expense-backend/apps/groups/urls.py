@@ -13,7 +13,10 @@ from apps.expenses.views.expense import (
     ExpenseDetailView,
     ExpenseTotalOwedView,
     ExpenseTotalIsOwedView,
-    ExpensePeopleIOweView
+    ExpensePeopleIOweView,
+    CSVImportView,
+    CSVAnomalyUpdateView,
+    CSVImportConfirmView
 )
 from apps.settlements.views.settlement import GroupSettlementsView
 
@@ -31,6 +34,15 @@ urlpatterns = [
     path('<int:group_id>/expenses/', ExpenseListCreateView.as_view(), name='expense_list_create_slash'),
     path('<int:group_id>/expenses/<int:expense_id>', ExpenseDetailView.as_view(), name='expense_detail'),
     path('<int:group_id>/expenses/<int:expense_id>/', ExpenseDetailView.as_view(), name='expense_detail_slash'),
+    
+    # CSV Import endpoints
+    path('<int:group_id>/expenses/import-csv', CSVImportView.as_view(), name='expense_import_csv'),
+    path('<int:group_id>/expenses/import-csv/', CSVImportView.as_view(), name='expense_import_csv_slash'),
+    path('<int:group_id>/expenses/import-csv/<int:job_id>/confirm', CSVImportConfirmView.as_view(), name='expense_import_confirm'),
+    path('<int:group_id>/expenses/import-csv/<int:job_id>/confirm/', CSVImportConfirmView.as_view(), name='expense_import_confirm_slash'),
+    path('<int:group_id>/expenses/import-csv/anomalies/<int:anomaly_id>', CSVAnomalyUpdateView.as_view(), name='expense_anomaly_update'),
+    path('<int:group_id>/expenses/import-csv/anomalies/<int:anomaly_id>/', CSVAnomalyUpdateView.as_view(), name='expense_anomaly_update_slash'),
+
 
     # Balance and settlements endpoints (with and without trailing slashes)
     path('<int:group_id>/total-owed', ExpenseTotalOwedView.as_view(), name='group_total_owed'),

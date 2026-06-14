@@ -17,7 +17,7 @@ class ImportAnomaly(models.Model):
     row_index = models.IntegerField()
     anomaly_type = models.CharField(max_length=50) # duplicate, currency, invalid_split, missing_payer, etc.
     description = models.TextField()
-    suggested_action = models.TextField()
+    suggested_action = models.TextField(blank=True, default='')
     status = models.CharField(max_length=20, default='pending') # pending, approved, ignored
     raw_data = models.TextField() # JSON serialized string of raw CSV row
     resolved_data = models.TextField(null=True, blank=True) # JSON serialized string of resolved CSV row

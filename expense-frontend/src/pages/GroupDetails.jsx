@@ -6,6 +6,7 @@ import { BeatLoader } from "react-spinners";
 
 import GroupTopBar from "../components/GroupTopBar";
 import AddExpense from "../components/Modals/AddExpense";
+import ImportCSVModal from "../components/Modals/ImportCSVModal";
 import MembersDrawer from "../components/MembersDrawer";
 import ExpenseDetailsModal from "../components/Modals/ExpenseDetailsModal";
 import GroupSummaryCards from "../components/Cards/GroupSummaryCard";
@@ -25,6 +26,7 @@ function GroupDetails() {
   const [selectedExpense, setSelectedExpense] = useState(null);
 
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
+  const [isImportCSVOpen, setIsImportCSVOpen] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
 
   const [expenses, setExpenses] = useState([]);
@@ -136,6 +138,7 @@ function GroupDetails() {
       <GroupTopBar
         group={groupData}
         handleAddExpense={() => setIsAddExpenseOpen(true)}
+        handleImportCSV={() => setIsImportCSVOpen(true)}
         toggleMembers={() => setShowMembers(true)}
         onDelete={handleDeleteGroup}
         onSettle={() => setIsSettleOpen(true)}
@@ -208,6 +211,13 @@ function GroupDetails() {
       <AddExpense
         isOpen={isAddExpenseOpen}
         setIsOpen={setIsAddExpenseOpen}
+        group={groupData}
+        refreshExpenses={fetchExpenses}
+      />
+
+      <ImportCSVModal
+        isOpen={isImportCSVOpen}
+        setIsOpen={setIsImportCSVOpen}
         group={groupData}
         refreshExpenses={fetchExpenses}
       />

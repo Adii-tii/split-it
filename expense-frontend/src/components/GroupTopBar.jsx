@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-function GroupTopBar({ group, onEdit, onDelete, handleAddExpense, toggleMembers }) {
+function GroupTopBar({ group, onEdit, onDelete, handleAddExpense, toggleMembers, onSettle }) {
   const groupName = group?.name || "Group";
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -22,10 +22,21 @@ function GroupTopBar({ group, onEdit, onDelete, handleAddExpense, toggleMembers 
 
       {/* Right side: Action CTA Buttons */}
       <div className="flex items-center gap-3 self-stretch sm:self-auto justify-end">
+        {/* Settle Up Button */}
+        {onSettle && (
+          <button
+            onClick={onSettle}
+            className="flex items-center gap-2 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-850 px-4 py-2 text-sm font-bold text-yellow-500 transition-colors shadow-lg cursor-pointer"
+          >
+            <i className="bi bi-check2-circle text-sm" />
+            <span>Settle Up</span>
+          </button>
+        )}
+
         {/* Add Expense Button */}
         <button
           onClick={handleAddExpense}
-          className="flex items-center gap-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 px-4 py-2 text-sm font-bold text-slate-950 transition-colors shadow-lg"
+          className="flex items-center gap-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 px-4 py-2 text-sm font-bold text-slate-950 transition-colors shadow-lg cursor-pointer"
         >
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />

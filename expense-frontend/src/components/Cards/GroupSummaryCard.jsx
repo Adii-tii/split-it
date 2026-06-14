@@ -1,6 +1,6 @@
 import React from "react";
 
-function GroupSummaryCards({ myBalance = 0, userOwes = 0, userIsOwed = 0, balances = [], memberEmails = [], totalSpent = 0 }) {
+function GroupSummaryCards({ myBalance = 0, userOwes = 0, userIsOwed = 0, balances = [], memberEmails = [], totalSpent = 0, onSettle }) {
   const formatMoney = (value) =>
     `₹${Number(value).toLocaleString("en-IN", {
       minimumFractionDigits: 2,
@@ -55,7 +55,12 @@ function GroupSummaryCards({ myBalance = 0, userOwes = 0, userIsOwed = 0, balanc
       </div>
 
       {/* Pending Settle-Ups Card */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-yellow-500/10 to-yellow-600/5 p-5 shadow-lg border border-yellow-500/20">
+      <div
+        onClick={balances.length > 0 ? onSettle : undefined}
+        className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-yellow-500/10 to-yellow-600/5 p-5 shadow-lg border border-yellow-500/20 transition-all ${
+          balances.length > 0 ? "cursor-pointer hover:bg-yellow-500/15" : ""
+        }`}
+      >
         <div className="absolute right-2 bottom-0 translate-y-3 translate-x-1 opacity-5 text-yellow-600 pointer-events-none">
           <svg className="h-24 w-24" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />

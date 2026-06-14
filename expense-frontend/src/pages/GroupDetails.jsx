@@ -10,6 +10,8 @@ import MembersDrawer from "../components/MembersDrawer";
 import ExpenseDetailsModal from "../components/Modals/ExpenseDetailsModal";
 import GroupSummaryCards from "../components/Cards/GroupSummaryCard";
 import ExpenseCard from "../components/Cards/ExpenseCard";
+import TransactionCard from "../components/Cards/TransactionCard";
+import SettleUpModal from "../components/Modals/SettleUpModal";
 import { serverEndpoint } from "../config/appConfig";
 
 function GroupDetails() {
@@ -26,10 +28,12 @@ function GroupDetails() {
   const [showMembers, setShowMembers] = useState(false);
 
   const [expenses, setExpenses] = useState([]);
+  const [settlements, setSettlements] = useState([]);
   const [userOwes, setUserOwes] = useState(0);
   const [userIsOwed, setUserIsOwed] = useState(0);
   const [overallBalance, setOverallBalance] = useState(0);
   const [balances, setBalances] = useState([]);
+  const [isSettleOpen, setIsSettleOpen] = useState(false);
 
   const fetchGroup = async () => {
     try {
@@ -46,11 +50,12 @@ function GroupDetails() {
   const fetchExpenses = async () => {
     if (!groupId) return;
     try {
-      const [expRes, owedRes, isOwedRes, peopleIOweRes] = await Promise.all([
+      const [expRes, owedRes, isOwedRes, peopleIOweRes, settlementsRes] = await Promise.all([
         axios.get(`${serverEndpoint}/groups/${groupId}/expenses`),
         axios.get(`${serverEndpoint}/groups/${groupId}/total-owed`),
         axios.get(`${serverEndpoint}/groups/${groupId}/total-is-owed`),
-        axios.get(`${serverEndpoint}/groups/${groupId}/people-i-owe`)
+        axios.get(`${serverEndpoint}/groups/${groupId}/people-i-owe`),
+        axios.get(`${serverEndpoint}/groups/${groupId}/settlements`)
       ]);
 
       setExpenses(expRes.data.expenses || []);
@@ -61,6 +66,7 @@ function GroupDetails() {
       setUserIsOwed(totalIsOwed);
       setOverallBalance(totalIsOwed - totalOwed);
       setBalances(peopleIOweRes.data.creditors || []);
+      setSettlements(settlementsRes.data.settlements || []);
     } catch (err) {
       console.error("Expense fetch failed", err);
     }
@@ -118,7 +124,7 @@ function GroupDetails() {
     return <div className="p-8 text-center text-slate-400">Group not found</div>;
   }
 
-  const sortedTimelineItems = [...expenses].sort(
+  const sortedTimelineItems = [...expenses, ...settlements].sort(
     (a, b) => new Date(b.createdAt || b.created_at) - new Date(a.createdAt || a.created_at)
   );
 
@@ -132,6 +138,7 @@ function GroupDetails() {
         handleAddExpense={() => setIsAddExpenseOpen(true)}
         toggleMembers={() => setShowMembers(true)}
         onDelete={handleDeleteGroup}
+        onSettle={() => setIsSettleOpen(true)}
       />
 
       {/* Summary Cards Panel */}
@@ -146,6 +153,7 @@ function GroupDetails() {
             const mySplit = e.splits?.find(s => s.email === user?.email);
             return sum + Number(mySplit?.share || 0);
           }, 0)}
+          onSettle={() => setIsSettleOpen(true)}
         />
       )}
 
@@ -176,11 +184,18 @@ function GroupDetails() {
                 </h3>
                 <div className="space-y-3">
                   {items.map((item) => (
-                    <ExpenseCard
-                      key={item.id || item._id}
-                      expense={item}
-                      onClick={setSelectedExpense}
-                    />
+                    item.fromUserEmail ? (
+                      <TransactionCard
+                        key={`settlement-${item.id || item._id}`}
+                        settlement={item}
+                      />
+                    ) : (
+                      <ExpenseCard
+                        key={`expense-${item.id || item._id}`}
+                        expense={item}
+                        onClick={setSelectedExpense}
+                      />
+                    )
                   ))}
                 </div>
               </div>
@@ -207,6 +222,14 @@ function GroupDetails() {
         group={groupData}
         isOpen={showMembers}
         setIsOpen={setShowMembers}
+      />
+
+      <SettleUpModal
+        isOpen={isSettleOpen}
+        setIsOpen={setIsSettleOpen}
+        group={groupData}
+        balances={balances}
+        refreshExpenses={fetchExpenses}
       />
     </div>
   );
